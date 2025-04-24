@@ -19,9 +19,13 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.28", features = ["full"] }
 tree-sitter = "0.20"
+tree-sitter-rust = "0.20.3"
+
 
 # New dependencies for Axum server
-axum = "0.6"
+axum = { version = "0.7.5", features = ["multipart"] }
 tower = "0.4"
 tower-http = { version = "0.4", features = ["trace"] }
 env_logger = "0.10"
+crossbeam-queue = "0.3.12"
+walkdir = "2.5.0"
