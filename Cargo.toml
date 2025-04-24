@@ -1,0 +1,27 @@
+[package]
+name = "livenv1"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+anyhow = "1.0"
+dashmap = "5.4"
+futures = "0.3"
+ignore = "0.4"
+indicatif = "0.17"
+log = "0.4"
+memmap2 = "0.5"
+neo4rs = "0.6"
+petgraph = "0.6"
+rayon = "1.7"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.28", features = ["full"] }
+tree-sitter = "0.20"
+
+# New dependencies for Axum server
+axum = "0.6"
+tower = "0.4"
+tower-http = { version = "0.4", features = ["trace"] }
+env_logger = "0.10"
