@@ -13,5 +13,5 @@
 /.env.production
 /node_modules
 /.next
-/server
+/src/server
 /python_callgraph
