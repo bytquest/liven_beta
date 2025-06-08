@@ -20,6 +20,9 @@ serde_json = "1.0"
 tokio = { version = "1.28", features = ["full"] }
 tree-sitter = "0.20"
 tree-sitter-rust = "0.20.3"
+tree-sitter-python = "0.20.0"
+mongodb = "3.2.3"
+sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "sqlite"] }
 
 
 # New dependencies for Axum server
@@ -29,3 +32,12 @@ tower-http = { version = "0.4", features = ["trace"] }
 env_logger = "0.10"
 crossbeam-queue = "0.3.12"
 walkdir = "2.5.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.16.0", features = ["v4"] }
+dotenv = "0.15.0"
+reqwest = { version = "0.12.15", features = ["json"] }
+clap = { version ="4.5.39",  features = ["derive"]}
+
+[[bin]]
+name = "open_source"
+path = "src/open_source/main.rs"
