@@ -334,7 +334,7 @@ pub fn extract_python_relationships(
                                     // Only record if both caller and callee exist
                                     if indexer.entities.contains_key(&resolved_name) && indexer.entities.contains_key(caller) {
                                         indexer.edges.push((caller.to_string(), resolved_name.clone(), "calls".to_string()));
-                                        println!("Relationship: {} calls {}", caller, &resolved_name);
+                                        println!("\n Relationship: {} calls {}\n", caller, &resolved_name);
                                     }
                                 }
                             }
