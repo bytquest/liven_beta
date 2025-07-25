@@ -4,8 +4,10 @@ use std::sync::Arc;
 use walkdir::WalkDir;
 mod indexing;
 mod python_indexing;
+mod typescript_indexing;
 use indexing::{process_and_store_analysis, Indexer, collect_rust_files, process_files_individually, display_results};
 use python_indexing::{process_python_files, process_python_file, Indexer as PyIndexer};
+use typescript_indexing::{process_typescript_files, process_typescript_file, collect_typescript_files, Indexer as TsIndexer};
 use tokio::runtime::Runtime;
 
 #[derive(Parser)]
@@ -26,7 +28,7 @@ struct Cli {
     #[arg(long, help = "Limit the number of files to process")]
     limit: Option<usize>,
 
-    #[arg(long, default_value = "rust", help = "Language to analyze: rust or python")]
+    #[arg(long, default_value = "rust", help = "Language to analyze: rust, python, or typescript")]
     language: String,
 }
 
@@ -156,6 +158,99 @@ fn main() {
                 }
                 if edge_vec.len() > 20 {
                     println!("  ...and {} more edges", edge_vec.len() - 20);
+                }
+            }
+        }
+        "typescript" => {
+            let indexer = Arc::new(TsIndexer::new());
+            let files = match collect_typescript_files(&cli.path, cli.limit, cli.verbose) {
+                Ok(files) => files,
+                Err(e) => {
+                    eprintln!("Failed to collect TypeScript files: {:?}", e);
+                    std::process::exit(1);
+                }
+            };
+            if files.is_empty() {
+                println!("No TypeScript files found in the specified path.");
+                return;
+            }
+            println!("Found {} TypeScript files to analyze", files.len());
+            
+            // Use the improved processing that handles cross-file dependencies
+            process_typescript_files(&files, &indexer, cli.verbose, false);
+            
+            match cli.output.as_str() {
+                "json" => {
+                    let summary = typescript_indexing::generate_summary(&indexer);
+                    println!("{}", serde_json::to_string_pretty(&summary).unwrap());
+                },
+                "detailed" => {
+                    // First, collect relationships for display before building the graph
+                    let mut relationships_for_display = Vec::new();
+                    let mut edge_count = 0;
+                    while let Some(edge) = indexer.edges.pop() {
+                        relationships_for_display.push(edge.clone());
+                        indexer.edges.push(edge); // Put it back for the graph
+                        edge_count += 1;
+                        if edge_count > 10000 { // Safety limit
+                            break;
+                        }
+                    }
+                    
+                    // Now build the dependency graph
+                    let graph = typescript_indexing::build_dependency_graph(&indexer);
+                    
+                    println!("\n=== TypeScript Analysis Summary ===");
+                    println!("Functions/classes discovered: {}", indexer.entities.len());
+                    println!("Relationships mapped: {}", relationships_for_display.len());
+                    println!("Dependency graph nodes: {}", graph.node_count());
+                    println!("Dependency graph edges: {}", graph.edge_count());
+                    
+                    println!("\n=== Discovered Entities ===");
+                    for entity in indexer.entities.iter().take(20) {
+                        println!(
+                            "  {} ({}) in {} (bytes {}-{})",
+                            entity.value().name,
+                            entity.value().entity_type,
+                            entity.value().file,
+                            entity.value().start,
+                            entity.value().end
+                        );
+                    }
+                    if indexer.entities.len() > 20 {
+                        println!("  ...and {} more", indexer.entities.len() - 20);
+                    }
+                    
+                    println!("\n=== Relationships ===");
+                    for (i, (source, target, edge_type)) in relationships_for_display.iter().enumerate().take(20) {
+                        println!(
+                            "  {} -> {} ({})",
+                            source, target, edge_type
+                        );
+                    }
+                    if relationships_for_display.len() > 20 {
+                        println!("  ...and {} more edges", relationships_for_display.len() - 20);
+                    }
+                },
+                _ => {
+                    // Basic summary - collect relationships first
+                    let mut relationship_count = 0;
+                    while let Some(edge) = indexer.edges.pop() {
+                        indexer.edges.push(edge); // Put it back
+                        relationship_count += 1;
+                        if relationship_count > 10000 { // Safety limit
+                            break;
+                        }
+                    }
+                    
+                    // Build the dependency graph
+                    let graph = typescript_indexing::build_dependency_graph(&indexer);
+                    
+                    println!("\n=== TypeScript Analysis Summary ===");
+                    println!("Functions/classes discovered: {}", indexer.entities.len());
+                    println!("Relationships mapped: {}", relationship_count);
+                    println!("Dependency graph nodes: {}", graph.node_count());
+                    println!("Dependency graph edges: {}", graph.edge_count());
                 }
             }
         }

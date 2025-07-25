@@ -21,6 +21,7 @@ tokio = { version = "1.28", features = ["full"] }
 tree-sitter = "0.20"
 tree-sitter-rust = "0.20.3"
 tree-sitter-python = "0.20.0"
+tree-sitter-typescript = "0.20.0"
 mongodb = "3.2.3"
 sqlx = { version = "0.6", features = ["runtime-tokio-native-tls", "sqlite"] }
 
